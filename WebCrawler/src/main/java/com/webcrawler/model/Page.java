@@ -1,5 +1,6 @@
 package com.webcrawler.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -14,7 +15,7 @@ public class Page {
 	@JsonProperty("address")
 	private String address;
 	@JsonProperty("links")
-	private List<String> links = null;
+	private List<String> links = new ArrayList<>();
 
 	@JsonProperty("address")
 	public String getAddress() {

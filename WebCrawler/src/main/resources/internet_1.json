@@ -1,0 +1,14 @@
+{
+  "pages":[
+    {
+      "address":"page-01",
+      "links":[
+        "page-02",
+        "page-03"
+      ]
+    },
+    {
+      "address":"page-02"
+    }
+  ]
+}

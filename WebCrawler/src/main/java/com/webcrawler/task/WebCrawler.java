@@ -1,6 +1,5 @@
 package com.webcrawler.task;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -9,26 +8,30 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 
+import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webcrawler.action.LinkFinderAction;
 import com.webcrawler.handler.LinkHandler;
 import com.webcrawler.model.Page;
 import com.webcrawler.model.PageStatus;
 import com.webcrawler.model.Pages;
+import com.webcrawler.util.FileUtility;
 
 /**
- * @author Sanjay 
- * The class used to store which store
- * VisitedLink,SkippedLinks,ErrorLinks. It invokes the forkjoin pool
- * with the starting page, prints the output of the result.
+ * @author Sanjay The class used to store which store
+ *         VisitedLink,SkippedLinks,ErrorLinks. It invokes the forkjoin pool
+ *         with the starting page, prints the output of the result.
  */
 public class WebCrawler implements LinkHandler {
+	/* Logger object */
+	final static Logger logger = Logger.getLogger(LinkFinderAction.class);
 	/* Synchronized set of all the visited links */
-	private static Collection<String> visitedLinks = Collections.synchronizedSet(new HashSet<String>());
+	private Collection<String> visitedLinks = Collections.synchronizedSet(new HashSet<String>());
 	/* Synchronized set of all the skipped links */
-	private static Collection<String> skippedLinks = Collections.synchronizedSet(new HashSet<String>());
+	private Collection<String> skippedLinks = Collections.synchronizedSet(new HashSet<String>());
 	/* Synchronized set of all the error links */
-	private static Collection<String> errorLinks = Collections.synchronizedSet(new HashSet<String>());
+	private Collection<String> errorLinks = Collections.synchronizedSet(new HashSet<String>());
 	/* Synchronized map of all the page and the links */
 	private Map<String, List<String>> pageMap = new ConcurrentHashMap<>();
 	/* List of all the pages */
@@ -47,7 +50,9 @@ public class WebCrawler implements LinkHandler {
 	/**
 	 * Start the Crawling operation with the starting page
 	 */
-	private void beginCrawling() {
+	public void beginCrawling() {
+
+		logger.info("Started Crawling with start page " + startPage);
 		mainPool.invoke(new LinkFinderAction(startPage, this));
 	}
 
@@ -96,9 +101,39 @@ public class WebCrawler implements LinkHandler {
 	}
 
 	/**
+	 * Returns the visitedlinks
+	 * 
+	 * 
+	 */
+
+	public Collection<String> getVisitedLinks() {
+		return visitedLinks;
+	}
+
+	/**
+	 * Returns the skippedlinks
+	 * 
+	 * 
+	 */
+
+	public Collection<String> getSkippedLinks() {
+		return skippedLinks;
+	}
+
+	/**
+	 * Returns the errorlinks
+	 * 
+	 * 
+	 */
+
+	public Collection<String> getErrorLinks() {
+		return errorLinks;
+	}
+
+	/**
 	 * Prints the Pages that are successful, skipped ,Error
 	 */
-	public static void getPageStatus() {
+	public void getPageStatus() {
 		System.out.println(PageStatus.SUCCESS.getStatus() + ":" + visitedLinks.toString());
 		System.out.println(PageStatus.SKIPPED.getStatus() + ":" + skippedLinks.toString());
 		System.out.println(PageStatus.ERROR.getStatus() + ":" + errorLinks.toString());
@@ -112,7 +147,6 @@ public class WebCrawler implements LinkHandler {
 	public Map<String, List<String>> getPageLink() {
 
 		for (Page page : pages.getPages()) {
-
 			pageMap.put(page.getAddress(), page.getLinks());
 		}
 		return pageMap;
@@ -124,9 +158,10 @@ public class WebCrawler implements LinkHandler {
 	 */
 	public static void main(String[] args) throws Exception {
 		ObjectMapper objectMapper = new ObjectMapper();
-		Pages readValue = objectMapper.readValue(new File("internet.json"), Pages.class);
-		new WebCrawler(readValue, "page-01", 64).beginCrawling();
-		getPageStatus();
+		Pages readValue = objectMapper.readValue(FileUtility.getFileFromResources("internet.json"), Pages.class);
+		WebCrawler webCrawler = new WebCrawler(readValue, "page-01", 64);
+		webCrawler.beginCrawling();
+		webCrawler.getPageStatus();
 	}
 
 }

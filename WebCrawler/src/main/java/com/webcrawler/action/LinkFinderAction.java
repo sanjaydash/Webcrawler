@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.RecursiveAction;
 
+import org.apache.log4j.Logger;
+
 import com.webcrawler.handler.LinkHandler;
 
 /**
@@ -14,6 +16,8 @@ import com.webcrawler.handler.LinkHandler;
  *         action to visit pages in parallel.
  */
 public class LinkFinderAction extends RecursiveAction {
+	/* Logger object */
+	final static Logger logger = Logger.getLogger(LinkFinderAction.class);
 	/* Computes the action recursively in parallel */
 	private String link;
 	/* Handler to hold the reference to webcrawler object */
@@ -29,8 +33,9 @@ public class LinkFinderAction extends RecursiveAction {
 	public void compute() {
 		try {
 			List<RecursiveAction> actions = new ArrayList<>();
+			logger.debug("Started crawling the page " + link);
 			List<String> linkList = linkHandler.getPageLink().get(link);
-			if (linkList != null || !linkList.isEmpty()) {
+			if (linkList != null && !linkList.isEmpty()) {
 				for (String pageLink : linkList) {
 					if (linkHandler.isVisited(pageLink)) {
 						linkHandler.addSkippedLinks(pageLink);
@@ -42,13 +47,13 @@ public class LinkFinderAction extends RecursiveAction {
 					}
 				}
 			} else {
-				linkHandler.addErrorLinks(link);
+				linkHandler.addVisitedLinks(link);
 			}
 
 			// invoke recursively
 			invokeAll(actions);
 		} catch (Exception e) {
-
+			logger.error("Error while computinng the pagelinks", e);
 		}
 	}
 }
